@@ -16,18 +16,43 @@ import kotlin.math.abs
  ***************************************
  * 项目名称:SwipeActivity
  * @Author wangxy
- * 邮箱：wangxiangyu@ksjgs.com
  * 创建时间: 2022/11/21     4:14 PM
- * 用途: 更新说明
+ * 用途: 滑动布局
  ***************************************
  */
-class SwipeFrameLayout(context: Context, attrs: AttributeSet?): FrameLayout(context, attrs) {
+class SwipeFrameLayout(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
 
-    private var touchSlop = ViewConfiguration.get(context)?.scaledTouchSlop?:20
+    private var touchSlop = ViewConfiguration.get(context)?.scaledTouchSlop ?: 20
 
+    /**
+     * 按下X点
+     */
     private var interceptX = 0f
 
+    /**
+     * 按下Y点
+     */
     private var interceptY = 0f
+
+    /**
+     * 摩擦力
+     */
+    private var friction = 2
+
+    /**
+     * 下滑高度百分比
+     */
+    private var percentHeight = 4
+
+    /**
+     * 动画时长
+     */
+    private var animDuration = 200L
+
+    /**
+     * 拖拽监听
+     */
+    private var onDragCloseListener: OnDragCloseListener? = null
 
     init {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
@@ -42,7 +67,7 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?): FrameLayout(cont
      */
     private fun shouldInterceptEvent(ev: MotionEvent?): Boolean {
         var shouldInterceptEvent = false
-        when(ev?.action) {
+        when (ev?.action) {
             MotionEvent.ACTION_DOWN -> {
                 interceptX = ev.rawX
                 interceptY = ev.rawY
@@ -68,18 +93,17 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?): FrameLayout(cont
      * 处理滑动事件
      */
     private fun handleTouchEvent(ev: MotionEvent?) {
-        when(ev?.action) {
+        when (ev?.action) {
             MotionEvent.ACTION_DOWN -> {
             }
             MotionEvent.ACTION_MOVE -> {
-                val offsetY = ev.rawY - interceptY
-                println("============>>$offsetY")
+                val offsetY = (ev.rawY - interceptY) / friction
                 if (offsetY > 0) {
                     translationY = offsetY
                 }
             }
             MotionEvent.ACTION_UP -> {
-                if (translationY > measuredHeight / 3) {
+                if (translationY > measuredHeight / percentHeight) {
                     close()
                 } else {
                     open()
@@ -89,11 +113,18 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?): FrameLayout(cont
     }
 
     /**
+     * 设置拖拽关闭监听
+     */
+    fun setOnDragCloseListener(onDragCloseListener: OnDragCloseListener?) {
+        this.onDragCloseListener = onDragCloseListener
+    }
+
+    /**
      * 打开页面
      */
     private fun open() {
         clearAnimation()
-        ObjectAnimator.ofFloat(this, View.TRANSLATION_Y,0f).setDuration(200).start()
+        ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, 0f).setDuration(animDuration).start()
     }
 
     /**
@@ -101,16 +132,24 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?): FrameLayout(cont
      */
     private fun close() {
         clearAnimation()
-        val animator = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y,measuredHeight.toFloat())
-        animator.duration = 200
-        animator.addListener(object: AnimatorListenerAdapter() {
+        val animator = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, measuredHeight.toFloat())
+        animator.duration = animDuration
+        animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator?) {
                 super.onAnimationEnd(animation)
-                if (context is AppCompatActivity) {
-                    (context as? AppCompatActivity)?.finish()
+                onDragCloseListener?.apply {
+                    onDragClose()
+                }.run {
+                    if (context is AppCompatActivity) {
+                        (context as? AppCompatActivity)?.finish()
+                    }
                 }
             }
         })
         animator.start()
     }
+}
+
+interface OnDragCloseListener {
+    fun onDragClose()
 }
