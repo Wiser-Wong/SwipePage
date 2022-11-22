@@ -5,6 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/design_default_color_secondary"
+    app:sf_enable_drag="true"
+    app:sf_friction="2"
+    app:sf_percent_spring="4"
+    app:sf_duration="200"
     tools:context=".MainActivity">
 
     <TextView

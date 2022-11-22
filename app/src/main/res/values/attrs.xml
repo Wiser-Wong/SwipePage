@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="SwipeFrameLayout">
+        <attr name="sf_friction" format="float"/>
+        <attr name="sf_percent_spring" format="float"/>
+        <attr name="sf_enable_drag" format="boolean"/>
+        <attr name="sf_duration" format="integer"/>
+    </declare-styleable>
+</resources>

@@ -20,7 +20,10 @@ import kotlin.math.abs
  * 用途: 滑动布局
  ***************************************
  */
-class SwipeFrameLayout(context: Context, attrs: AttributeSet?) : FrameLayout(context, attrs) {
+class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
+    FrameLayout(context, attrs, defStyleAttr) {
+
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
 
     private var touchSlop = ViewConfiguration.get(context)?.scaledTouchSlop ?: 20
 
@@ -37,12 +40,12 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
     /**
      * 摩擦力
      */
-    private var friction = 2
+    private var friction = 2f
 
     /**
      * 下滑高度百分比
      */
-    private var percentHeight = 4
+    private var percentHeight = 4f
 
     /**
      * 动画时长
@@ -54,8 +57,26 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
      */
     private var onDragCloseListener: OnDragCloseListener? = null
 
+    /**
+     * 是否能拖拽
+     */
+    private var isEnableDrag = true
+
+    /**
+     * 是否动画正在运行
+     */
+    private var isAnimRunning = false
+
     init {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+
+        val ta =
+            context.obtainStyledAttributes(attrs, R.styleable.SwipeFrameLayout, defStyleAttr, 0)
+        isEnableDrag = ta.getBoolean(R.styleable.SwipeFrameLayout_sf_enable_drag, isEnableDrag)
+        friction = ta.getFloat(R.styleable.SwipeFrameLayout_sf_friction,friction)
+        percentHeight = ta.getFloat(R.styleable.SwipeFrameLayout_sf_percent_spring, percentHeight)
+        animDuration = ta.getInteger(R.styleable.SwipeFrameLayout_sf_duration, animDuration.toInt()).toLong()
+        ta.recycle()
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent?): Boolean {
@@ -66,6 +87,7 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
      * 是否拦截事件
      */
     private fun shouldInterceptEvent(ev: MotionEvent?): Boolean {
+        if (!isEnableDrag) return false
         var shouldInterceptEvent = false
         when (ev?.action) {
             MotionEvent.ACTION_DOWN -> {
@@ -85,6 +107,7 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (!isEnableDrag) return false
         handleTouchEvent(event)
         return true
     }
@@ -120,23 +143,63 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?) : FrameLayout(con
     }
 
     /**
+     * 设置是否能拖拽
+     */
+    fun setEnableDrag(isEnableDrag: Boolean) {
+        this.isEnableDrag = isEnableDrag
+    }
+
+    /**
+     * 设置摩擦力
+     */
+    fun setFriction(friction: Float) {
+        this.friction = friction
+    }
+
+    /**
+     * 设置百分比高度回弹
+     */
+    fun setPercentHeightSpring(percentHeight: Float) {
+        this.percentHeight = percentHeight
+    }
+
+    /**
+     * 设置动画时间
+     */
+    fun setDuration(animDuration: Long) {
+        this.animDuration = animDuration
+    }
+
+    /**
      * 打开页面
      */
     private fun open() {
+        if (isAnimRunning) return
+        isAnimRunning = true
         clearAnimation()
-        ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, 0f).setDuration(animDuration).start()
+        val animator = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, 0f)
+        animator.addListener(object: AnimatorListenerAdapter(){
+            override fun onAnimationEnd(animation: Animator?) {
+                super.onAnimationEnd(animation)
+                isAnimRunning = false
+            }
+        })
+        animator.setDuration(animDuration).start()
     }
 
     /**
      * 关闭页面
      */
     private fun close() {
+        if (isAnimRunning) return
+        isAnimRunning = true
         clearAnimation()
         val animator = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, measuredHeight.toFloat())
         animator.duration = animDuration
         animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator?) {
                 super.onAnimationEnd(animation)
+                isAnimRunning = false
                 onDragCloseListener?.apply {
                     onDragClose()
                 }.run {
