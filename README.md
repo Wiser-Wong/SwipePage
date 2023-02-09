@@ -19,6 +19,7 @@
           app:sf_percent_spring="4"
           app:sf_duration="200"
           app:sf_orientation="vertical"
+          app:sf_close_act="true"
           tools:context=".MainActivity">
 
           <TextView
@@ -40,6 +41,7 @@
 * sf_percent_spring:滑动百分比距离关闭 4/height 默认是高度的1/4
 * sf_enable_drag:是否能拖拽
 * sf_duration:动画时长
+* sf_close_act:是否关闭Activity
 * sf_orientation:滑动方向
   * horizontal
   * vertical
