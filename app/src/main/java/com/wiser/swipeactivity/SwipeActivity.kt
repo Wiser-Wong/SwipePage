@@ -1,7 +1,6 @@
 package com.wiser.swipeactivity
 
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
@@ -19,10 +18,11 @@ class SwipeActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_swipe)
-    }
-
-    fun toast(view: View) {
-        Toast.makeText(this, "我是第二页", Toast.LENGTH_LONG).show()
+        findViewById<SwipeFrameLayout>(R.id.fl_swipe)?.setOnDragCloseListener(onDragCloseListener = object : OnDragCloseListener{
+            override fun onDragClose() {
+                Toast.makeText(this@SwipeActivity, "关闭了", Toast.LENGTH_LONG).show()
+            }
+        })
     }
 
     override fun onAttachedToWindow() {
@@ -35,9 +35,5 @@ class SwipeActivity: AppCompatActivity() {
 
     override fun finish() {
         super.finish()
-        overridePendingTransition(
-            R.anim.activity_bottom_silent,
-            R.anim.activity_bottom_silent
-        )
     }
 }

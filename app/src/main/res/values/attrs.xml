@@ -5,5 +5,9 @@
         <attr name="sf_percent_spring" format="float"/>
         <attr name="sf_enable_drag" format="boolean"/>
         <attr name="sf_duration" format="integer"/>
+        <attr name="sf_orientation" format="integer">
+            <enum name="horizontal" value="1"/>
+            <enum name="vertical" value="0"/>
+        </attr>
     </declare-styleable>
 </resources>

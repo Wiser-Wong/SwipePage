@@ -17,7 +17,7 @@ import kotlin.math.abs
  * 项目名称:SwipeActivity
  * @Author wangxy
  * 创建时间: 2022/11/21     4:14 PM
- * 用途: 滑动布局
+ * 用途: 滑动关闭布局
  ***************************************
  */
 class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int) :
@@ -43,9 +43,9 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
     private var friction = 2f
 
     /**
-     * 下滑高度百分比
+     * 滑动百分比距离关闭 4/height 默认是高度的1/4
      */
-    private var percentHeight = 4f
+    private var percentDistance = 4f
 
     /**
      * 动画时长
@@ -67,15 +67,28 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
      */
     private var isAnimRunning = false
 
+    /**
+     * 方向
+     */
+    private var orientation: Int = VERTICAL
+
+    companion object {
+        const val HORIZONTAL = 1
+        const val VERTICAL = 0
+    }
+
     init {
         layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
 
         val ta =
             context.obtainStyledAttributes(attrs, R.styleable.SwipeFrameLayout, defStyleAttr, 0)
         isEnableDrag = ta.getBoolean(R.styleable.SwipeFrameLayout_sf_enable_drag, isEnableDrag)
-        friction = ta.getFloat(R.styleable.SwipeFrameLayout_sf_friction,friction)
-        percentHeight = ta.getFloat(R.styleable.SwipeFrameLayout_sf_percent_spring, percentHeight)
-        animDuration = ta.getInteger(R.styleable.SwipeFrameLayout_sf_duration, animDuration.toInt()).toLong()
+        friction = ta.getFloat(R.styleable.SwipeFrameLayout_sf_friction, friction)
+        percentDistance =
+            ta.getFloat(R.styleable.SwipeFrameLayout_sf_percent_spring, percentDistance)
+        animDuration =
+            ta.getInteger(R.styleable.SwipeFrameLayout_sf_duration, animDuration.toInt()).toLong()
+        orientation = ta.getInteger(R.styleable.SwipeFrameLayout_sf_orientation, orientation)
         ta.recycle()
     }
 
@@ -97,7 +110,17 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
             MotionEvent.ACTION_MOVE -> {
                 val offsetX = abs(ev.rawX - interceptX)
                 val offsetY = abs(ev.rawY - interceptY)
-                shouldInterceptEvent = offsetY >= touchSlop * 3 || offsetY > offsetX
+                when (orientation) {
+                    VERTICAL -> {
+                        shouldInterceptEvent = offsetY >= touchSlop * 3 || offsetY > offsetX
+                    }
+                    HORIZONTAL -> {
+                        shouldInterceptEvent = offsetX >= touchSlop * 3 || offsetX > offsetY
+                    }
+                    else -> {
+                        isEnableDrag = false
+                    }
+                }
             }
             MotionEvent.ACTION_UP -> {
                 shouldInterceptEvent = false
@@ -120,16 +143,37 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
             MotionEvent.ACTION_DOWN -> {
             }
             MotionEvent.ACTION_MOVE -> {
-                val offsetY = (ev.rawY - interceptY) / friction
-                if (offsetY > 0) {
-                    translationY = offsetY
+                when (orientation) {
+                    VERTICAL -> {
+                        val offsetY = (ev.rawY - interceptY) / friction
+                        if (offsetY > 0) {
+                            translationY = offsetY
+                        }
+                    }
+                    HORIZONTAL -> {
+                        val offsetX = (ev.rawX - interceptX) / friction
+                        if (offsetX > 0) {
+                            translationX = offsetX
+                        }
+                    }
                 }
             }
             MotionEvent.ACTION_UP -> {
-                if (translationY > measuredHeight / percentHeight) {
-                    close()
-                } else {
-                    open()
+                when (orientation) {
+                    VERTICAL -> {
+                        if (translationY > measuredHeight / percentDistance) {
+                            close()
+                        } else {
+                            open()
+                        }
+                    }
+                    HORIZONTAL -> {
+                        if (translationX > measuredWidth / percentDistance) {
+                            close()
+                        } else {
+                            open()
+                        }
+                    }
                 }
             }
         }
@@ -149,6 +193,8 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
         this.isEnableDrag = isEnableDrag
     }
 
+    fun getEnableDrag(): Boolean = isEnableDrag
+
     /**
      * 设置摩擦力
      */
@@ -156,12 +202,16 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
         this.friction = friction
     }
 
+    fun getFriction(): Float = friction
+
     /**
      * 设置百分比高度回弹
      */
     fun setPercentHeightSpring(percentHeight: Float) {
-        this.percentHeight = percentHeight
+        this.percentDistance = percentHeight
     }
+
+    fun getPercentDistance(): Float = percentDistance
 
     /**
      * 设置动画时间
@@ -170,6 +220,17 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
         this.animDuration = animDuration
     }
 
+    fun getDuration(): Long = animDuration
+
+    /**
+     * 设置方向
+     */
+    fun setOrientation(orientation: Int) {
+        this.orientation = orientation
+    }
+
+    fun getOrientation(): Int = orientation
+
     /**
      * 打开页面
      */
@@ -177,8 +238,13 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
         if (isAnimRunning) return
         isAnimRunning = true
         clearAnimation()
-        val animator = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, 0f)
-        animator.addListener(object: AnimatorListenerAdapter(){
+        val property = when (orientation) {
+            VERTICAL -> View.TRANSLATION_Y
+            HORIZONTAL -> View.TRANSLATION_X
+            else -> View.TRANSLATION_Y
+        }
+        val animator = ObjectAnimator.ofFloat(this, property, 0f)
+        animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator?) {
                 super.onAnimationEnd(animation)
                 isAnimRunning = false
@@ -194,17 +260,32 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
         if (isAnimRunning) return
         isAnimRunning = true
         clearAnimation()
-        val animator = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, measuredHeight.toFloat())
+        val property = when (orientation) {
+            VERTICAL -> View.TRANSLATION_Y
+            HORIZONTAL -> View.TRANSLATION_X
+            else -> View.TRANSLATION_Y
+        }
+        val value = when (orientation) {
+            VERTICAL -> measuredHeight.toFloat()
+            HORIZONTAL -> measuredWidth.toFloat()
+            else -> measuredHeight.toFloat()
+        }
+        val animator = ObjectAnimator.ofFloat(this, property, value)
         animator.duration = animDuration
         animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator?) {
                 super.onAnimationEnd(animation)
                 isAnimRunning = false
-                onDragCloseListener?.apply {
-                    onDragClose()
-                }.run {
-                    if (context is AppCompatActivity) {
-                        (context as? AppCompatActivity)?.finish()
+                if (onDragCloseListener != null) {
+                    onDragCloseListener?.onDragClose()
+                }
+                if (context is AppCompatActivity) {
+                    (context as? AppCompatActivity)?.apply {
+                        finish()
+                        overridePendingTransition(
+                            R.anim.activity_bottom_silent,
+                            R.anim.activity_bottom_silent
+                        )
                     }
                 }
             }
