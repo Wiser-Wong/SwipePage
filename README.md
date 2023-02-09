@@ -1,37 +1,48 @@
-# SwipeActivity
+# SwipePage
+滑动关闭页面
 
-#### 介绍
-滑动销毁Activity
+## 截图
+![images](https://github.com/Wiser-Wong/SwipePage/blob/master/images/swipe_v.gif)
+![images](https://github.com/Wiser-Wong/SwipePage/blob/master/images/swipe_h.gif)
 
-#### 软件架构
-软件架构说明
+# 使用方法
+   
+      <com.wiser.swipeactivity.SwipeFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:app="http://schemas.android.com/apk/res-auto"
+          xmlns:tools="http://schemas.android.com/tools"
+          android:id="@+id/fl_swipe"
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:background="@color/design_default_color_secondary"
+          app:sf_enable_drag="true"
+          app:sf_friction="2"
+          app:sf_percent_spring="4"
+          app:sf_duration="200"
+          app:sf_orientation="vertical"
+          app:sf_close_act="true"
+          tools:context=".MainActivity">
 
+          <TextView
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:text="swipe页面"
+              android:gravity="center"
+              android:textColor="@color/design_default_color_primary"
+              android:textSize="30sp"
+              app:layout_constraintBottom_toBottomOf="parent"
+              app:layout_constraintEnd_toEndOf="parent"
+              app:layout_constraintStart_toStartOf="parent"
+              app:layout_constraintTop_toTopOf="parent" />
 
-#### 安装教程
+    </com.wiser.swipeactivity.SwipeFrameLayout>
+                         
+# 操作指南
+* sf_friction:摩擦力
+* sf_percent_spring:滑动百分比距离关闭 4/height 默认是高度的1/4
+* sf_enable_drag:是否能拖拽
+* sf_duration:动画时长
+* sf_close_act:是否关闭Activity
+* sf_orientation:滑动方向
+  * horizontal
+  * vertical
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 使用说明
-
-1.  xxxx
-2.  xxxx
-3.  xxxx
-
-#### 参与贡献
-
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
-
-
-#### 特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
