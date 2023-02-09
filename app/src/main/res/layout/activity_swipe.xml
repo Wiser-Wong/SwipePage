@@ -11,6 +11,7 @@
     app:sf_percent_spring="4"
     app:sf_duration="200"
     app:sf_orientation="vertical"
+    app:sf_close_act="true"
     tools:context=".MainActivity">
 
     <TextView

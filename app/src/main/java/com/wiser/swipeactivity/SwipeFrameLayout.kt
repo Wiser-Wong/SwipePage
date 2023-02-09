@@ -72,6 +72,11 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
      */
     private var orientation: Int = VERTICAL
 
+    /**
+     * 是否关闭Activity
+     */
+    private var isCloseActivity: Boolean = true
+
     companion object {
         const val HORIZONTAL = 1
         const val VERTICAL = 0
@@ -89,6 +94,7 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
         animDuration =
             ta.getInteger(R.styleable.SwipeFrameLayout_sf_duration, animDuration.toInt()).toLong()
         orientation = ta.getInteger(R.styleable.SwipeFrameLayout_sf_orientation, orientation)
+        isCloseActivity = ta.getBoolean(R.styleable.SwipeFrameLayout_sf_close_act, true)
         ta.recycle()
     }
 
@@ -232,6 +238,15 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
     fun getOrientation(): Int = orientation
 
     /**
+     * 设置是否关闭Activity
+     */
+    fun setCloseActivity(isCloseActivity: Boolean) {
+        this.isCloseActivity = isCloseActivity
+    }
+
+    fun isCloseActivity(): Boolean = isCloseActivity
+
+    /**
      * 打开页面
      */
     private fun open() {
@@ -279,13 +294,16 @@ class SwipeFrameLayout(context: Context, attrs: AttributeSet?, defStyleAttr: Int
                 if (onDragCloseListener != null) {
                     onDragCloseListener?.onDragClose()
                 }
-                if (context is AppCompatActivity) {
-                    (context as? AppCompatActivity)?.apply {
-                        finish()
-                        overridePendingTransition(
-                            R.anim.activity_bottom_silent,
-                            R.anim.activity_bottom_silent
-                        )
+                // 关闭Activity
+                if (isCloseActivity) {
+                    if (context is AppCompatActivity) {
+                        (context as? AppCompatActivity)?.apply {
+                            finish()
+                            overridePendingTransition(
+                                R.anim.activity_bottom_silent,
+                                R.anim.activity_bottom_silent
+                            )
+                        }
                     }
                 }
             }
